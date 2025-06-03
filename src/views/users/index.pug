@@ -1,0 +1,8 @@
+extends ../layouts/layout.pug
+
+block content
+  h2 The list of all our dear clients
+  ul
+    each user in users
+      li
+        a(href=`/users/${user.id}`) #{user.username} (#{user.email})
