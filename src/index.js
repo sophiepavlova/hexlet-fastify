@@ -3,6 +3,7 @@ import view from '@fastify/view'
 import pug from 'pug'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import sanitize from 'sanitize-html'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,10 +19,52 @@ const state = {
   ],
 };
 
+const courses = [
+  { id: 1, name: 'JavaScript Basics', description: 'Learn JS fundamentals' },
+  { id: 2, name: 'Advanced CSS', description: 'Styling like a pro' },
+  { id: 3, name: 'Fastify', description: 'Web development with Fastify' },
+];
+
 // Подключаем pug через плагин и указываем папку с шаблонами
 await app.register(view, {
   engine: { pug },
   root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
+});
+
+app.get('/courses', (req, res) => {
+  const { term = '', description = ''}  = req.query
+  
+    const coursesFiltered = courses.filter(course => {
+      const nameMatches = term === '' || course.name.toLowerCase().includes(term.toLowerCase());
+      const descMatches = description === '' || course.description.toLowerCase().includes(description.toLowerCase());
+      return nameMatches && descMatches;
+    }
+    );
+  
+
+  const data = { 
+    term, 
+    description,
+    courses: coursesFiltered }
+
+  res.view('courses/index', data)
+})
+
+// Пример уязвимости XSS
+// app.get('/xss/:id', (req, res) => {
+//   res.type('html');
+//   res.send(`<h1>${req.params.id}</h1>`);
+// });
+//http://localhost:3000/xss/%3Cscript%3Ealert('attack!')%3B%3C%2Fscript%3E
+
+// // Пример  without уязвимости XSS
+app.get('/xss/:id', (req, res) => {
+  res.type('html');
+  // const escapedId = sanitize(req.params.id)
+  const escapedId = sanitize(req.params.id, { allowedTags: [], allowedAttributes: {} });
+
+  // res.send(`<h1>${escapedId}</h1>`);
+  res.send(`<pre>${escapedId}</pre>`);
 });
 
 // Главная страница — рендерит users/index.pug и передаёт users
