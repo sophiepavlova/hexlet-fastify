@@ -1,0 +1,16 @@
+html
+  body
+    form(action = '/users', method = 'post')
+      div
+        label Имя:
+          input(type = 'text', name = 'name')
+      div
+        label Email:
+          input(type = 'email', name = 'email', required = true)
+      div
+        label Пароль:
+          input(type = 'password', name = 'password', required = true)
+      div
+        label Подтверждение пароля:
+          input(type = 'password', name = 'passwordConfirmation', required = true)
+      input(type = 'submit', value = 'Зарегистрировать')

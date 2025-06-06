@@ -4,12 +4,27 @@ import pug from 'pug'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import sanitize from 'sanitize-html'
+import formbody from '@fastify/formbody'
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = fastify();
 const port = 3000;
+await app.register(formbody)
+
+app.decorate('state', {
+  users: [],
+  courses: [],
+})
+
+import usersRoutes from './routes/users.js'
+await app.register(usersRoutes, { prefix: '/users' })
+import coursesRoutes from './routes/courses.js'
+await app.register(coursesRoutes, { prefix: '/courses' })
+import rootRoutes from './routes/root.js'
+await app.register(rootRoutes, { prefix: '/' })
 
 // Данные пользователей (состояние)
 const state = {
@@ -31,24 +46,6 @@ await app.register(view, {
   root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
 });
 
-app.get('/courses', (req, res) => {
-  const { term = '', description = ''}  = req.query
-  
-    const coursesFiltered = courses.filter(course => {
-      const nameMatches = term === '' || course.name.toLowerCase().includes(term.toLowerCase());
-      const descMatches = description === '' || course.description.toLowerCase().includes(description.toLowerCase());
-      return nameMatches && descMatches;
-    }
-    );
-  
-
-  const data = { 
-    term, 
-    description,
-    courses: coursesFiltered }
-
-  res.view('courses/index', data)
-})
 
 // Пример уязвимости XSS
 // app.get('/xss/:id', (req, res) => {
@@ -67,26 +64,7 @@ app.get('/xss/:id', (req, res) => {
   res.send(`<pre>${escapedId}</pre>`);
 });
 
-// Главная страница — рендерит users/index.pug и передаёт users
-app.get('/', (req, res) => {
-  res.view('users/index', { users: state.users });
-});
 
-// Пример POST-запроса
-app.post('/users', (req, res) => {
-  res.send('POST /users');
-});
-
-// Пример параметризированного маршрута
-app.get('/users/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const user = state.users.find(u => u.id === id);
-  if (!user) {
-    res.code(404).send('User not found');
-    return;
-  }
-  res.view('users/show', { user });
-});
 
 // Другие маршруты
 app.get('/hello', (req, res) => {
@@ -96,23 +74,6 @@ app.get('/hello', (req, res) => {
   } else {
     res.send(`Hello, ${name}!`);
   }
-});
-
-app.get('/courses/:courseId/lessons/:id', (req, res) => {
-  res.send(`Course ID: ${req.params.courseId}; Lesson ID: ${req.params.id}`);
-});
-
-app.get('/users/:id/post/:postId', (req, res) => {
-  const { id, postId } = req.params;
-  res.send(`User ID: ${id}; Post ID: ${postId}`);
-});
-
-app.get('/courses/new', (req, res) => {
-  res.send('Course build');
-});
-
-app.get('/courses/:id', (req, res) => {
-  res.send(`Course ID: ${req.params.id}`);
 });
 
 app.listen({ port }, (err) => {
