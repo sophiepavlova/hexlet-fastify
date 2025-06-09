@@ -1,13 +1,16 @@
-h2 Courses
-form(role = 'form' method = 'GET' action = '/courses')
-  input(type = 'search', name = 'term', value = term placeholder='Search by name')
-  input(type = 'search', name = 'description', value = description placeholder='Search by description')
-  input(type = 'submit' value = 'search')
-  a(href='/courses') Очистить
+extends ../layouts/layout.pug
 
-if courses.length > 0
-  ul
-    each course in courses
-      li #{course.name} — #{course.description}
-else
-  p Ничего не найдено
+block content
+  h2 Courses
+  form(role = 'form' method = 'GET' action = '/courses')
+    input(type = 'search', name = 'term', value = term placeholder='Search by name')
+    input(type = 'search', name = 'description', value = description placeholder='Search by description')
+    input(type = 'submit' value = 'search')
+    a(href='/courses') Очистить
+
+  if courses.length > 0
+    ul
+      each course in courses
+        li #{course.name} — #{course.description}
+  else
+    p Ничего не найдено

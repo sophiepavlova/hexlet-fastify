@@ -5,6 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import sanitize from 'sanitize-html'
 import formbody from '@fastify/formbody'
+import * as yup from 'yup';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,20 +26,6 @@ import coursesRoutes from './routes/courses.js'
 await app.register(coursesRoutes, { prefix: '/courses' })
 import rootRoutes from './routes/root.js'
 await app.register(rootRoutes, { prefix: '/' })
-
-// Данные пользователей (состояние)
-const state = {
-  users: [
-    { id: 1, username: 'user1', email: 'user1@example.com' },
-    { id: 2, username: 'user2', email: 'user2@example.com' },
-  ],
-};
-
-const courses = [
-  { id: 1, name: 'JavaScript Basics', description: 'Learn JS fundamentals' },
-  { id: 2, name: 'Advanced CSS', description: 'Styling like a pro' },
-  { id: 3, name: 'Fastify', description: 'Web development with Fastify' },
-];
 
 // Подключаем pug через плагин и указываем папку с шаблонами
 await app.register(view, {

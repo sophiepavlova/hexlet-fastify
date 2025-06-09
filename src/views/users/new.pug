@@ -1,16 +1,30 @@
 html
   body
-    form(action = '/users', method = 'post')
+    if error
+      p= error.message
+    form(action='/users', method='post')
       div
         label Имя:
-          input(type = 'text', name = 'name')
+        input(type='text', name='username', value=username || '')
+        if errors && errors.username
+          p(style='color:red')= errors.username
+
       div
         label Email:
-          input(type = 'email', name = 'email', required = true)
+        input(type='email', name='email', required, value=email || '')
+        if errors && errors.email
+          p(style='color:red')= errors.email
+
       div
         label Пароль:
-          input(type = 'password', name = 'password', required = true)
+        input(type='password', name='password', required)
+        if errors && errors.password
+          p(style='color:red')= errors.password
+
       div
         label Подтверждение пароля:
-          input(type = 'password', name = 'passwordConfirmation', required = true)
-      input(type = 'submit', value = 'Зарегистрировать')
+        input(type='password', name='passwordConfirmation', required)
+        if errors && errors.passwordConfirmation
+          p(style='color:red')= errors.passwordConfirmation
+
+      input(type='submit', value='Зарегистрировать')

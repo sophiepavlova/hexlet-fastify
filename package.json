@@ -24,9 +24,12 @@
     "fastify-cli": "^7.4.0",
     "fastify-plugin": "^5.0.0",
     "pug": "^3.0.3",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.0",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
-    "c8": "^10.1.2"
+    "@types/yup": "^0.29.14",
+    "c8": "^10.1.2",
+    "nodemon": "^3.1.10"
   }
 }

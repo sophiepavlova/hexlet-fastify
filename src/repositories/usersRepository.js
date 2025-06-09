@@ -16,3 +16,4 @@ export function addUser(user) {
 export function getUserById(id) {
   return users.find(u => u.id === id)
 }
+
