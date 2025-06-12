@@ -2,7 +2,8 @@ html
   body
     if error
       p= error.message
-    form(action='/users', method='post')
+    //- form(action='/users', method='post')
+    form(method="post" action=routes.usersCreate())
       div
         label Имя:
         input(type='text', name='username', value=username || '')

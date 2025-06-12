@@ -9,9 +9,4 @@ export default async (app, options) => {
     res.view('index', templateData);
   });
 };
-// export default async function (fastify, opts) {
-//   fastify.get('/', async function (request, reply) {
-//     // return 'Hello'
-//     return { root: true }
-//   })
-// }
+

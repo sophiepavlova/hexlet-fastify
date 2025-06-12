@@ -21,11 +21,14 @@ app.decorate('state', {
 })
 
 import usersRoutes from './routes/users.js'
-await app.register(usersRoutes, { prefix: '/users' })
+await app.register(usersRoutes)
+// await app.register(usersRoutes, { prefix: '/users' })
 import coursesRoutes from './routes/courses.js'
-await app.register(coursesRoutes, { prefix: '/courses' })
+await app.register(coursesRoutes)
+// await app.register(coursesRoutes, { prefix: '/courses' })
 import rootRoutes from './routes/root.js'
-await app.register(rootRoutes, { prefix: '/' })
+await app.register(rootRoutes)
+// await app.register(rootRoutes, { prefix: '/' })
 
 // Подключаем pug через плагин и указываем папку с шаблонами
 await app.register(view, {

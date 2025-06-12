@@ -1,8 +1,11 @@
 import { getAllCourses, getCourseById, addCourse } from '../repositories/coursesRepository.js'
+import RouteHelper from '../RouteHelper.js';
 import * as yup from 'yup';
 
 export default async function (app, _options) {
-  app.get('/', (req, res) => {
+  app.get(RouteHelper.coursesIndex(), (req, res) => {
+    console.log('✅ Курс роуты подключены');
+
     const { term = '', description = '' } = req.query;
     
     // Получаем курсы из глобального состояния
@@ -17,7 +20,8 @@ export default async function (app, _options) {
     const data = { 
       term, 
       description,
-      courses: coursesFiltered
+      courses: coursesFiltered,
+      routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
     };
 
     res.view('courses/index', data);
@@ -33,17 +37,22 @@ export default async function (app, _options) {
 });
 
 //Adding a new course
-app.get('/new', (req, res) => {
-  res.view('courses/new'); // форма добавления
+app.get(RouteHelper.newCourse(), (req, res) => {
+  res.view('courses/new', {
+      name: '',
+      description: '',
+      errors: {},
+      routes: RouteHelper,
+    });
 //   res.send('Course build');
 });
 
-app.post('/', {
+app.post(RouteHelper.coursesCreate(), {
     attachValidation: true,
     schema: {
       body: yup.object({
         name: yup.string().min(2, 'Имя должно быть не меньше двух символов').required('Введите имя курса'),
-        description: yup.string().min(10, 'Описание не должно быть не меньше двух символов').required('Введите описание курса'),
+        description: yup.string().min(10, 'Описание не должно быть меньше десяти символов').required('Введите описание курса'),
       }),
     },
     validatorCompiler: ({ schema }) => (data) => {
@@ -68,6 +77,7 @@ app.post('/', {
         name,
         description,
         errors,
+        routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
       };
 
      console.log('Ошибки валидации:', errors);
@@ -80,19 +90,11 @@ app.post('/', {
     };
     console.log('Adding new course:', newCourse);
     addCourse(newCourse);
-    res.redirect('/courses');
+    console.log('Redirecting to:', RouteHelper.coursesIndex());
+    res.redirect(RouteHelper.coursesIndex());
   });
 
-// app.post('/', (req, res) => {
-//   const course = {
-//     name: req.body.name.trim(),
-//     description: req.body.description.trim(),
-//   };
-//   addCourse(course);
-//   res.redirect('/courses');
-// });
-
-  app.get('/:id', (req, res) => {
+  app.get(RouteHelper.courseShow(), (req, res) => {
     const course = getCourseById(parseInt(req.params.id));
     if (!course) {
       res.code(404).send('Course not found');

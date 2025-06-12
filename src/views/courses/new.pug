@@ -3,7 +3,7 @@ html
     if error
       p= error.message
     h2 Add New Course
-    form(action='/courses' method='post')
+    form(action= routes.coursesCreate() method='post')
       label(for='name') Name:
       input(type='text' name='name' id='name' value = name required)
       if errors && errors.name
@@ -17,3 +17,4 @@ html
 
       br
       button(type='submit') Add Course
+      a(href=routes.coursesIndex()) Back to Courses

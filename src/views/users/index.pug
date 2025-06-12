@@ -5,4 +5,6 @@ block content
   ul
     each user in users
       li
-        a(href=`/users/${user.id}`) #{user.username} (#{user.email})
+        a(href=routes.userShow(user.id)) #{user.username} (#{user.email})
+        //- a(href=`/users/${user.id}`) #{user.username} (#{user.email})
+  a(href=routes.newUser()) Новый пользователь

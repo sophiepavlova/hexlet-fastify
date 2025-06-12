@@ -2,24 +2,35 @@
 // @ts-check
 import { getAllUsers, addUser, getUserById } from '../repositories/usersRepository.js'
 import { generateId, crypto } from '../utils.js';
-
+import RouteHelper from '../RouteHelper.js';
 import * as yup from 'yup';
 
 
 export default async function (app, _options) {
 
   // getAllUsers
-  app.get('/', (req, res) => {
-    const users = getAllUsers()
-    res.view('users/index', { users })
+ app.get(RouteHelper.usersIndex(), (req, res) => {
+  const users = getAllUsers()
+  res.view('users/index', {
+    users,
+    routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
   })
+})
+
 
   //Get a new user form 
-  app.get('/new', (req, res) => {
-    res.view('users/new')
+  app.get(RouteHelper.newUser(), (req, res) => {
+    res.view('users/new', {
+      username: '',
+      email: '',
+      password: '',
+      passwordConfirmation: '',
+      errors: {},
+      routes: RouteHelper,
+    })
   })
 
-  app.post('/', {
+  app.post(RouteHelper.usersCreate(), {
     attachValidation: true,
     schema: {
       body: yup.object({
@@ -54,10 +65,13 @@ export default async function (app, _options) {
         password,
         passwordConfirmation,
         errors,
+        routes: RouteHelper, 
       };
 
       console.log(req.body, req.validationError) 
-      return res.view('users/new', data);
+      // res.view(RouteHelper.newUser(), { routes: RouteHelper });
+      // res.view(RouteHelper.newUser(), { ...data, routes: RouteHelper });
+      return res.view('users/new', { ...data, routes: RouteHelper })
     }
 
     const newUser = {
@@ -68,12 +82,13 @@ export default async function (app, _options) {
     };
     console.log('Adding new user:', newUser);
     addUser(newUser);
-    res.redirect('/users');
+    res.redirect(RouteHelper.usersIndex());
+    // res.redirect('/users');
   });
 
 
 
-  app.get('/:id', (req, res) => {
+  app.get(RouteHelper.userShow(), (req, res) => {
     const id = parseInt(req.params.id);
     const user =  getUserById(id)
     if (!user) {
@@ -83,9 +98,9 @@ export default async function (app, _options) {
     res.view('users/show', { user });
   });
 
+app.get(RouteHelper.userPost(), (req, res) => {
+  const { id, postId } = req.params;
+  res.send(`User ID: ${id}; Post ID: ${postId}`);
+});
 
-  app.get('/:id/post/:postId', (req, res) => {
-    const { id, postId } = req.params;
-    res.send(`User ID: ${id}; Post ID: ${postId}`);
-  });
 }
