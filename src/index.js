@@ -1,4 +1,5 @@
 import fastify from 'fastify'
+import fastifyCookie from '@fastify/cookie'
 import view from '@fastify/view'
 import pug from 'pug'
 import path from 'path'
@@ -13,6 +14,8 @@ const __dirname = path.dirname(__filename);
 
 const app = fastify();
 const port = 3000;
+await app.register(fastifyCookie)
+
 await app.register(formbody)
 
 app.decorate('state', {
@@ -65,6 +68,28 @@ app.get('/hello', (req, res) => {
     res.send(`Hello, ${name}!`);
   }
 });
+
+app.get('/cookies', (req, res) => {
+  console.log(req.cookies)
+
+  res.send()
+})
+
+app.get('/coolcookie', (req, res) => {
+  res.cookie('test', 'value')
+  // res.send('Hi! Cookie set.')
+  res.send(`req.cookies: ${JSON.stringify(req.cookies)}`)
+})
+
+app.get('/start', (req, res) => {
+  const visited = req.cookies.visited
+  const templateData = {
+    visited,
+  }
+  res.cookie('visited', true)
+
+  res.view('index', templateData)
+})
 
 app.listen({ port }, (err) => {
   if (err) {

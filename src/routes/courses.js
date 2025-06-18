@@ -94,12 +94,15 @@ app.post(RouteHelper.coursesCreate(), {
     res.redirect(RouteHelper.coursesIndex());
   });
 
+  // Show course details
   app.get(RouteHelper.courseShow(), (req, res) => {
-    const course = getCourseById(parseInt(req.params.id));
+    const id = parseInt(req.params.id);
+    const course = getCourseById(id);
     if (!course) {
       res.code(404).send('Course not found');
       return;
     }
-    res.send(`Course ID: ${course.id}; Name: ${course.name}`);
+    // res.send(`Course ID: ${course.id}; Name: ${course.name}`);
+    res.view('courses/show', { user });
   });
 }

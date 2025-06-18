@@ -86,8 +86,6 @@ export default async function (app, _options) {
     // res.redirect('/users');
   });
 
-
-
   app.get(RouteHelper.userShow(), (req, res) => {
     const id = parseInt(req.params.id);
     const user =  getUserById(id)
