@@ -1,9 +1,9 @@
-// routes/users.js
 // @ts-check
 import { getAllUsers, addUser, getUserById } from '../repositories/usersRepository.js'
 import { generateId, crypto } from '../utils.js';
 import RouteHelper from '../RouteHelper.js';
 import * as yup from 'yup';
+import encrypt from '../encrypt.js';
 
 
 export default async function (app, _options) {
@@ -99,6 +99,31 @@ export default async function (app, _options) {
 app.get(RouteHelper.userPost(), (req, res) => {
   const { id, postId } = req.params;
   res.send(`User ID: ${id}; Post ID: ${postId}`);
+});
+
+app.get('/session/new', (req, res) => {
+  res.view('users/login')  
+})
+
+app.post('/session', (req, res) => {
+  const { email, password } = req.body;
+  const passwordDigest = encrypt(password);
+  console.log('Login attempt:', { email, passwordDigest });
+  const users = getAllUsers();
+
+  const user = users.find((u) => {
+    console.log(`users password: ${u.password}, input password: ${passwordDigest}`);
+   return u.email === email &&  encrypt(u.password) === passwordDigest
+});
+  if (!user) {
+    return res.view('users/login', {
+      error: 'Неверный email или пароль',
+      email, // чтобы пользователь не вводил заново
+    });
+  }
+
+  req.session.userId = user.id;
+  res.redirect(`${RouteHelper.usersPrefix}/${user.id}`)
 });
 
 }

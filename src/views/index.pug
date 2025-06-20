@@ -1,5 +1,7 @@
-extends ./layouts/layout.pug
+extends layouts/layout.pug
 
 block content
   main
+    a(href="/session/new") Войти
     h1 Привет Хекслет!
+    //- a(href=`${RouteHelper.usersPrefix}/login`) Login

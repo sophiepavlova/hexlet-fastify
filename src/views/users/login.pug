@@ -1,0 +1,15 @@
+extends ../layouts/layout.pug
+
+block content
+  h1 Вход
+  if error
+    p.text-danger= error
+  form(action="/session" method="post")
+    div
+      label(for="email") Email:
+      input(type="email" name="email" required value=email)
+    div
+      label(for="password") Password:
+      input(type="password" name="password" required)
+    div
+      button(type="submit") Войти

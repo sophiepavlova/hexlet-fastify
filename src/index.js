@@ -1,4 +1,7 @@
 import fastify from 'fastify'
+import session from '@fastify/session'
+// import crypto from 'crypto';
+
 import fastifyCookie from '@fastify/cookie'
 import view from '@fastify/view'
 import pug from 'pug'
@@ -14,7 +17,12 @@ const __dirname = path.dirname(__filename);
 
 const app = fastify();
 const port = 3000;
+
 await app.register(fastifyCookie)
+await app.register(session, {
+  secret: 'a secret with minimum length of 32 characters',
+  cookie: { secure: false },
+})
 
 await app.register(formbody)
 
@@ -89,6 +97,11 @@ app.get('/start', (req, res) => {
   res.cookie('visited', true)
 
   res.view('index', templateData)
+})
+
+app.get('/increment', (req, res) => {
+  req.session.counter = req.session.counter || 0
+  req.session.counter += 1
 })
 
 app.listen({ port }, (err) => {
