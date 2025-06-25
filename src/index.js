@@ -1,8 +1,12 @@
 import fastify from 'fastify'
+import fastifyCookie from '@fastify/cookie'
 import session from '@fastify/session'
+import flash from '@fastify/flash'
+import fastifyStatic from '@fastify/static'
+
 // import crypto from 'crypto';
 
-import fastifyCookie from '@fastify/cookie'
+import sqlite3 from 'sqlite3'
 import view from '@fastify/view'
 import pug from 'pug'
 import path from 'path'
@@ -10,7 +14,9 @@ import { fileURLToPath } from 'url'
 import sanitize from 'sanitize-html'
 import formbody from '@fastify/formbody'
 import * as yup from 'yup';
+import db, { prepareDatabase } from './database.js'
 
+prepareDatabase()
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,18 +24,30 @@ const __dirname = path.dirname(__filename);
 const app = fastify();
 const port = 3000;
 
+app.register(fastifyStatic, {
+  root: path.join(__dirname, '../node_modules/bootstrap/dist/css'),
+  prefix: '/assets/',
+})
+
 await app.register(fastifyCookie)
 await app.register(session, {
-  secret: 'a secret with minimum length of 32 characters',
+  secret: 'a secret with minimum length of 32 characters', // можно заменить на что-то получше
   cookie: { secure: false },
 })
-
+await app.register(flash)
 await app.register(formbody)
 
-app.decorate('state', {
-  users: [],
-  courses: [],
-})
+app.decorateReply('render', function(viewName, data) {
+  const flash = this.flash();
+  const finalData = { ...data, flash };
+  return this.view(viewName, finalData);
+});
+
+// Подключаем pug через плагин и указываем папку с шаблонами
+await app.register(view, {
+  engine: { pug },
+  root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
+});
 
 import usersRoutes from './routes/users.js'
 await app.register(usersRoutes)
@@ -40,12 +58,6 @@ await app.register(coursesRoutes)
 import rootRoutes from './routes/root.js'
 await app.register(rootRoutes)
 // await app.register(rootRoutes, { prefix: '/' })
-
-// Подключаем pug через плагин и указываем папку с шаблонами
-await app.register(view, {
-  engine: { pug },
-  root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
-});
 
 
 // Пример уязвимости XSS
@@ -96,7 +108,7 @@ app.get('/start', (req, res) => {
   }
   res.cookie('visited', true)
 
-  res.view('index', templateData)
+  res.render('index', templateData)
 })
 
 app.get('/increment', (req, res) => {

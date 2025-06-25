@@ -4,50 +4,35 @@ import * as yup from 'yup';
 
 export default async function (app, _options) {
   app.get(RouteHelper.coursesIndex(), (req, res) => {
-    console.log('✅ Курс роуты подключены');
-
-    const { term = '', description = '' } = req.query;
-    
-    // Получаем курсы из глобального состояния
-    const courses = getAllCourses();
-
-    const coursesFiltered = courses.filter(course => {
-      const nameMatches = term === '' || course.name.toLowerCase().includes(term.toLowerCase());
-      const descMatches = description === '' || course.description.toLowerCase().includes(description.toLowerCase());
-      return nameMatches && descMatches;
+    db.all('SELECT * FROM courses', (error, data) => {
+      const templateData = {
+        courses: data,
+        error,
+      };
+      res.view('courses/index', templateData);
     });
-
-    const data = { 
-      term, 
-      description,
-      courses: coursesFiltered,
-      routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
-    };
-
-    res.view('courses/index', data);
   });
 
- app.get('/:courseId/lessons/:id', (req, res) => {
-  const course = getCourseById(parseInt(req.params.courseId));
-  if (!course) {
-    res.code(404).send('Course not found');
-    return;
-  }
-  res.send(`Course ID: ${course.id}; Lesson ID: ${req.params.id}`);
-});
+  app.get('/:courseId/lessons/:id', (req, res) => {
+    const course = getCourseById(parseInt(req.params.courseId));
+    if (!course) {
+      res.code(404).send('Course not found');
+      return;
+    }
+    res.send(`Course ID: ${course.id}; Lesson ID: ${req.params.id}`);
+  });
 
-//Adding a new course
-app.get(RouteHelper.newCourse(), (req, res) => {
-  res.view('courses/new', {
+  // Adding a new course
+  app.get(RouteHelper.newCourse(), (req, res) => {
+    res.view('courses/new', {
       name: '',
       description: '',
       errors: {},
       routes: RouteHelper,
     });
-//   res.send('Course build');
-});
+  });
 
-app.post(RouteHelper.coursesCreate(), {
+  app.post(RouteHelper.coursesCreate(), {
     attachValidation: true,
     schema: {
       body: yup.object({
@@ -63,35 +48,44 @@ app.post(RouteHelper.coursesCreate(), {
         return { error: e };
       }
     },
-    }, (req, res) => {
+  }, (req, res) => {
     const { name, description } = req.body;
 
     if (req.validationError) {
-
       const errors = {};
       req.validationError.inner.forEach((err) => {
         errors[err.path] = err.message;
       });
 
-      const data = {
+      return res.view('courses/new', {
         name,
         description,
         errors,
-        routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
-      };
-
-     console.log('Ошибки валидации:', errors);
-    return res.view('courses/new', data);
+        routes: RouteHelper,
+      });
     }
 
-    const newCourse = {
-      name: name.trim(),
-      description: description.trim(),
-    };
-    console.log('Adding new course:', newCourse);
-    addCourse(newCourse);
-    console.log('Redirecting to:', RouteHelper.coursesIndex());
-    res.redirect(RouteHelper.coursesIndex());
+    const stmt = db.prepare('INSERT INTO courses(name, description) VALUES (?, ?)');
+    stmt.run([name, description], function (error) {
+      if (error) {
+        const templateData = {
+          error,
+          course: { name, description },
+          routes: RouteHelper,
+        };
+        res.view('courses/new', templateData);
+        return;
+      }
+
+      const newCourse = {
+        name: name.trim(),
+        description: description.trim(),
+      };
+      console.log('Adding new course:', newCourse);
+      addCourse(newCourse);
+      console.log('Redirecting to:', RouteHelper.coursesIndex());
+      res.redirect(`/courses/${this.lastID}`);
+    });
   });
 
   // Show course details
@@ -102,7 +96,6 @@ app.post(RouteHelper.coursesCreate(), {
       res.code(404).send('Course not found');
       return;
     }
-    // res.send(`Course ID: ${course.id}; Name: ${course.name}`);
-    res.view('courses/show', { user });
+    res.view('courses/show', { course });
   });
 }

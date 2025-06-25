@@ -1,6 +1,15 @@
 extends ../layouts/layout.pug
 
 block content
+  if flash && flash.success
+    each msg in flash.success
+      .alert.alert-success= msg
+
+  if flash && flash.error
+    each msg in flash.error
+      .alert.alert-danger= msg
+
+  // Rest of the page content
   h2 The list of all our dear clients
   ul
     each user in users

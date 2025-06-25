@@ -1,6 +1,13 @@
 extends ../layouts/layout.pug
 
 block content
+  if messages && messages.success
+    each msg in messages.success
+      .alert.alert-success= msg
+
+  if messages && messages.error
+    each msg in messages.error
+      .alert.alert-danger= msg
   h2 Dear Client's Info
   ul
     li Name: #{user.name}

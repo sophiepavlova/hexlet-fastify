@@ -4,6 +4,13 @@ html
     title My app
     link(rel="stylesheet", href="/assets/bootstrap.min.css")
   body
+    if messages && messages.success
+      each msg in messages.success
+        .alert.alert-success= msg
+
+    if messages&& messages.error
+      each msg in messages.error
+        .alert.alert-danger= msg
     header
       h1 My Website
       nav

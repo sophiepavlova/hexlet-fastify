@@ -9,18 +9,37 @@ import encrypt from '../encrypt.js';
 export default async function (app, _options) {
 
   // getAllUsers
- app.get(RouteHelper.usersIndex(), (req, res) => {
-  const users = getAllUsers()
-  res.view('users/index', {
-    users,
-    routes: RouteHelper, // 👈 это добавит в шаблон объект маршрутов
+  app.get(RouteHelper.usersIndex(), (req, res) => {
+    const users = getAllUsers()
+    const messages = res.flash(); // ← get flash messages from session
+    console.log('Flash messages raw:', messages);
+
+    res.render('users/index', {
+      users,
+      routes: RouteHelper, // это добавит в шаблон объект маршрутов
+      messages, 
+    })
   })
-})
 
+  app.get('/test-flash', (req, res) => {
+    req.flash('success', 'Тестовое сообщение');
+    res.redirect(RouteHelper.usersIndex());
+  });
 
-  //Get a new user form 
+  app.get('/flash-set', (req, res) => {
+  req.flash('success', 'Сообщение для проверки');
+  res.redirect('/flash-show');
+});
+
+app.get('/flash-show', (req, res) => {
+  const messages = res.flash();
+  console.log('Flash messages:', messages);
+  res.send(messages);
+});
+
+  // Get a new user form 
   app.get(RouteHelper.newUser(), (req, res) => {
-    res.view('users/new', {
+    res.render('users/new', {
       username: '',
       email: '',
       password: '',
@@ -50,7 +69,8 @@ export default async function (app, _options) {
         return { error: e };
       }
     },
-    }, (req, res) => {
+  }, (req, res) => {
+    
     const { username, email, password, passwordConfirmation } = req.body;
 
     if (req.validationError) {
@@ -65,65 +85,77 @@ export default async function (app, _options) {
         password,
         passwordConfirmation,
         errors,
-        routes: RouteHelper, 
+        routes: RouteHelper,
       };
-
-      console.log(req.body, req.validationError) 
-      // res.view(RouteHelper.newUser(), { routes: RouteHelper });
-      // res.view(RouteHelper.newUser(), { ...data, routes: RouteHelper });
-      return res.view('users/new', { ...data, routes: RouteHelper })
+      
+      return res.render('users/new', data);
     }
 
-    const newUser = {
-      id: generateId(),
-      username: username.trim(),
-      email: email.trim().toLowerCase(),
-      password: crypto(password),
-    };
-    console.log('Adding new user:', newUser);
-    addUser(newUser);
-    res.redirect(RouteHelper.usersIndex());
-    // res.redirect('/users');
+    try {
+      const newUser = {
+        id: generateId(),
+        username: username.trim(),
+        name: username.trim(),
+        email: email.trim().toLowerCase(),
+        password: crypto(password),
+      };
+
+      addUser(newUser);
+      console.log('User added:', newUser);
+      req.flash('success', 'Пользователь зарегистрирован');
+    } catch (e) {
+      req.flash('error', 'Ошибка регистрации');
+    }
+
+    console.log('Setting flash and redirecting...');
+    console.log('Flash (success):', req.session.flash);
+
+    return res.redirect(RouteHelper.usersIndex());
   });
+
 
   app.get(RouteHelper.userShow(), (req, res) => {
     const id = parseInt(req.params.id);
-    const user =  getUserById(id)
+    const user =  getUserById(id);
     if (!user) {
       res.code(404).send('User not found');
       return;
     }
-    res.view('users/show', { user });
+    const messages = res.flash(); // Получаем flash-сообщения
+    console.log('На странице u/:id сообщения:', messages);
+    res.render('users/show', { user, messages });
   });
 
-app.get(RouteHelper.userPost(), (req, res) => {
-  const { id, postId } = req.params;
-  res.send(`User ID: ${id}; Post ID: ${postId}`);
-});
+  app.get(RouteHelper.userPost(), (req, res) => {
+    const { id, postId } = req.params;
+    res.send(`User ID: ${id}; Post ID: ${postId}`);
+  });
 
-app.get('/session/new', (req, res) => {
-  res.view('users/login')  
-})
+  app.get('/session/new', (req, res) => {
+    res.render('users/login')  
+  })
 
-app.post('/session', (req, res) => {
-  const { email, password } = req.body;
-  const passwordDigest = encrypt(password);
-  console.log('Login attempt:', { email, passwordDigest });
-  const users = getAllUsers();
+  app.post('/session', (req, res) => {
+    const { email, password } = req.body;
+    const passwordDigest = encrypt(password);
+    console.log('Login attempt:', { email, passwordDigest });
+    const users = getAllUsers();
 
-  const user = users.find((u) => {
-    console.log(`users password: ${u.password}, input password: ${passwordDigest}`);
-   return u.email === email &&  encrypt(u.password) === passwordDigest
-});
-  if (!user) {
-    return res.view('users/login', {
-      error: 'Неверный email или пароль',
-      email, // чтобы пользователь не вводил заново
+    const user = users.find((u) => {
+      console.log(`users password: ${u.password}, input password: ${passwordDigest}`);
+      return u.email === email && encrypt(u.password) === passwordDigest;
     });
-  }
+    if (!user) {
+      return res.render('users/login', {
+        error: 'Неверный email или пароль',
+        email, // чтобы пользователь не вводил заново
+      });
+    }
 
-  req.session.userId = user.id;
-  res.redirect(`${RouteHelper.usersPrefix}/${user.id}`)
-});
+    req.session.userId = user.id;
+    req.flash('success', 'Добро пожаловать, ' + user.name);
+    console.log('Перед редиректом /u/:id — flash:', req.session.flash);
+    res.redirect(`${RouteHelper.usersPrefix}/${user.id}`)
+  });
 
 }
