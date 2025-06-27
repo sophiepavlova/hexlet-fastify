@@ -1,13 +1,24 @@
 extends ../layouts/layout.pug
 
 block content
-  if messages && messages.success
-    each msg in messages.success
+  p This is user show page
+  p= user.name
+  p= user.email
+  if flash && flash.success
+    each msg in flash.success
       .alert.alert-success= msg
 
-  if messages && messages.error
-    each msg in messages.error
+  if flash && flash.error
+    each msg in flash.error
       .alert.alert-danger= msg
+
+  //- if messages && messages.success
+  //-   each msg in messages.success
+  //-     .alert.alert-success= msg
+
+  //- if messages && messages.error
+  //-   each msg in messages.error
+  //-     .alert.alert-danger= msg
   h2 Dear Client's Info
   ul
     li Name: #{user.name}

@@ -9,17 +9,55 @@ import encrypt from '../encrypt.js';
 export default async function (app, _options) {
 
   // getAllUsers
-  app.get(RouteHelper.usersIndex(), (req, res) => {
-    const users = getAllUsers()
-    const messages = res.flash(); // ← get flash messages from session
-    console.log('Flash messages raw:', messages);
+  app.get(RouteHelper.usersIndex(), async (req, res) => {
+  try {
+    const users = await getAllUsers();
+    console.log('Loaded users:', users);
+    const flash = res.flash();
+
+    users.forEach(u => console.log(`User: ${u.name} (${u.email})`));
 
     res.render('users/index', {
       users,
-      routes: RouteHelper, // это добавит в шаблон объект маршрутов
-      messages, 
-    })
-  })
+      routes: RouteHelper,
+      // messages: flash, 
+    });
+    // res.view('users/index', {
+    //   users,
+    //   routes: RouteHelper,
+    //   // messages: flash, 
+    // });
+    // res.send('test')
+    // res.send(JSON.stringify(users))
+    // res.send({ users, flash }); // <-- временно вместо шаблона
+
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.code(500).send('Internal Server Error');
+  }
+});
+
+  app.get('/test-render', (req, res) => {
+  res.view('test', { message: 'If you see this, rendering works!' });
+});
+
+// app.get('/u', async (req, res) => {
+//   const users = await getAllUsers();
+//   res.view('users/index', {
+//     users,
+//     routes: RouteHelper,
+//   });
+// });
+
+app.get('/test-pug', async (req, res) => {
+  res.view('users/test-index', { users: [] });
+});
+
+app.get('/pure-pug-test', (req, res) => {
+  console.log('Rendering test.pug...');
+  res.view('test'); // no folders
+});
+
 
   app.get('/test-flash', (req, res) => {
     req.flash('success', 'Тестовое сообщение');
@@ -69,7 +107,7 @@ app.get('/flash-show', (req, res) => {
         return { error: e };
       }
     },
-  }, (req, res) => {
+  }, async(req, res) => {
     
     const { username, email, password, passwordConfirmation } = req.body;
 
@@ -94,13 +132,13 @@ app.get('/flash-show', (req, res) => {
     try {
       const newUser = {
         id: generateId(),
-        username: username.trim(),
+        // username: username.trim(),
         name: username.trim(),
         email: email.trim().toLowerCase(),
         password: crypto(password),
       };
 
-      addUser(newUser);
+      await addUser(newUser);
       console.log('User added:', newUser);
       req.flash('success', 'Пользователь зарегистрирован');
     } catch (e) {
@@ -114,16 +152,20 @@ app.get('/flash-show', (req, res) => {
   });
 
 
-  app.get(RouteHelper.userShow(), (req, res) => {
+  app.get(RouteHelper.userShow(), async(req, res) => {
     const id = parseInt(req.params.id);
-    const user =  getUserById(id);
+    const user =  await getUserById(id);
     if (!user) {
       res.code(404).send('User not found');
       return;
     }
     const messages = res.flash(); // Получаем flash-сообщения
     console.log('На странице u/:id сообщения:', messages);
-    res.render('users/show', { user, messages });
+    // res.render('users/show', { user });
+    // res.render('users/show', { user, messages });
+    res.render('users/show', { user });
+    // res.send(user);
+
   });
 
   app.get(RouteHelper.userPost(), (req, res) => {
@@ -135,11 +177,11 @@ app.get('/flash-show', (req, res) => {
     res.render('users/login')  
   })
 
-  app.post('/session', (req, res) => {
+  app.post('/session', async(req, res) => {
     const { email, password } = req.body;
     const passwordDigest = encrypt(password);
     console.log('Login attempt:', { email, passwordDigest });
-    const users = getAllUsers();
+    const users = await getAllUsers();
 
     const user = users.find((u) => {
       console.log(`users password: ${u.password}, input password: ${passwordDigest}`);

@@ -36,6 +36,17 @@ await app.register(session, {
 })
 await app.register(flash)
 await app.register(formbody)
+// Подключаем pug через плагин и указываем папку с шаблонами
+console.log('VIEWS PATH:', path.join(__dirname, './views'))
+
+await app.register(view, {
+  engine: { pug },
+  root: path.join(__dirname, './views'),
+});
+// await app.register(view, {
+//   engine: { pug },
+//   root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
+// });
 
 app.decorateReply('render', function(viewName, data) {
   const flash = this.flash();
@@ -43,11 +54,6 @@ app.decorateReply('render', function(viewName, data) {
   return this.view(viewName, finalData);
 });
 
-// Подключаем pug через плагин и указываем папку с шаблонами
-await app.register(view, {
-  engine: { pug },
-  root: path.join(__dirname, 'views'), // Путь к папке с шаблонами
-});
 
 import usersRoutes from './routes/users.js'
 await app.register(usersRoutes)

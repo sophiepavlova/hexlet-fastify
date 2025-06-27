@@ -4,27 +4,48 @@ const db = new sqlite3.Database(':memory:')
 
 export const prepareDatabase = () => {
   db.serialize(() => {
+    // Создаём таблицу courses
     db.run(`
       CREATE TABLE courses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
         description TEXT
       );
-    `)
+    `);
 
     const courses = [
-      { title: 'JavaScript', description: 'Курс по языку программирования JavaScript' },
-      { title: 'Fastify', description: 'Курс по фреймворку Fastify' },
-    ]
+      { name: 'JavaScript', description: 'Курс по языку программирования JavaScript' },
+      { name: 'Advanced CSS', description: 'Styling like a pro' },
+      { name: 'Fastify', description: 'Курс по фреймворку Fastify' },
+    ];
 
-    const stmt = db.prepare('INSERT INTO courses(title, description) VALUES (?, ?)')
+    const courseStmt = db.prepare('INSERT INTO courses(name, description) VALUES (?, ?)');
+    courses.forEach(({ name, description }) => {
+      courseStmt.run(name, description);
+    });
+    courseStmt.finalize();
 
-    courses.forEach(({ title, description }) => {
-      stmt.run(title, description)
-    })
+    // ⬇️ Создаём таблицу users
+    db.run(`
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      );
+    `);
 
-    stmt.finalize()
-  })
-}
+    const users = [
+      { name: 'Alice', email: 'alice@example.com', password: '123' },
+      { name: 'Bob', email: 'bob@example.com', password: '456' },
+    ];
+
+    const userStmt = db.prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+    users.forEach(({ name, email, password }) => {
+      userStmt.run(name, email, password);
+    });
+    userStmt.finalize();
+  });
+};
 
 export default db

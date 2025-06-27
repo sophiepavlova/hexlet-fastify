@@ -1,25 +1,37 @@
+//- doctype html
+//- html
+//-   head
+//-     title My app
+//-     link(rel="stylesheet", href="/assets/bootstrap.min.css")
+//-   body
+//-     p Layout is rendering!
+//-     if messages && messages.success
+//-       each msg in messages.success
+//-         .alert.alert-success= msg
+
+//-     if messages&& messages.error
+//-       each msg in messages.error
+//-         .alert.alert-danger= msg
+//-     header
+//-       h1 My Website
+//-       nav
+//-         a(href="/") Home
+//-     main
+//-       block content
+//-     footer
+//-       p 
+//-         | Created by 
+//-         a(href="https://github.com/sophiepavlova/" target="_blank") sophiepavlova
+//-     p June 3, 2025
 doctype html
 html
   head
-    title My app
-    link(rel="stylesheet", href="/assets/bootstrap.min.css")
+    title Test Layout
   body
-    if messages && messages.success
-      each msg in messages.success
-        .alert.alert-success= msg
-
-    if messages&& messages.error
-      each msg in messages.error
-        .alert.alert-danger= msg
     header
-      h1 My Website
-      nav
-        a(href="/") Home
+      h1 Layout is working!
     main
       block content
     footer
-      p 
-        | Created by 
-        a(href="https://github.com/sophiepavlova/" target="_blank") sophiepavlova
-    p June 3, 2025
+      p Footer text here
         
